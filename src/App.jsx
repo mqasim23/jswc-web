@@ -935,6 +935,12 @@ const App = () => {
 
           return;
         } else if ((Event && Event == 'ItemDown') || (Event && Event == 'GotFocus')) {
+          const refData = JSON.parse(getObjectById(dataRef.current, ID));
+
+          const exists =
+            refData?.Properties?.Event &&
+            refData?.Properties?.Event.some((item) => item[0] === Event);
+
           const event = JSON.stringify({
             Event: {
               EventName: Event,
@@ -943,6 +949,7 @@ const App = () => {
             },
           });
           console.log(event);
+          if (!exists) return;
           webSocket.send(event);
           return;
         }
