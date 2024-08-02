@@ -318,6 +318,8 @@ const App = () => {
             value = serverEvent?.Properties.Text;
           } else if (serverEvent?.Properties.hasOwnProperty('Value')) {
             value = serverEvent?.Properties.Value;
+          }else if (serverEvent?.Properties.hasOwnProperty('SelText')) {
+            value = serverEvent?.Properties.SelText;
           }
           // Check that the Already Present Data have Text Key or Value Key
           if (data?.Properties.hasOwnProperty('Text')) {
@@ -338,6 +340,18 @@ const App = () => {
                 ID: serverEvent.ID,
                 Properties: {
                   Value: value,
+                },
+              },
+              'WS'
+            );
+          }
+           else if (data?.Properties.hasOwnProperty('SelText')) {
+            setSocketData((prevData) => [...prevData, JSON.parse(event.data).WS]);
+            return handleData(
+              {
+                ID: serverEvent.ID,
+                Properties: {
+                  SelText: value,
                 },
               },
               'WS'
@@ -526,7 +540,7 @@ const App = () => {
 
         if (Type == 'Edit') {
           const { Text, Value } = Properties;
-          const supportedProperties = ['Text', 'Value'];
+          const supportedProperties = ['Text', 'Value', 'SelText'];
 
           const result = checkSupportedProperties(supportedProperties, serverEvent?.Properties);
 
@@ -576,8 +590,8 @@ const App = () => {
           const { Event } = JSON.parse(localStorage.getItem(serverEvent?.ID));
           const { Info } = Event;
           const serverPropertiesObj = {};
-          serverEvent.Properties.map((key) => {
-            return (serverPropertiesObj[key] = key == 'Value' ? Info : Info.toString());
+          serverEvent.Properties.map((key) => { 
+            return (serverPropertiesObj[key] = key == 'Value' ? Info : key == 'SelText' ? Info: Info.toString());
           });
 
           console.log(

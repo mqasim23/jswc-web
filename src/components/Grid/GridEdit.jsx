@@ -5,14 +5,16 @@ import { calculateDateAfterDays, getObjectById, calculateDaysFromDate } from '..
 import dayjs from 'dayjs';
 
 const GridEdit = ({ data }) => {
+  // console.log({data})
   const inputRef = useRef(null);
   const dateRef = useRef(null);
   const [isEditable, setIsEditable] = useState(false);
 
   const [dateFormattedValue, setDateFormattedValue] = useState(data?.value);
 
+
   const { FieldType, Decimal } = data?.typeObj?.Properties;
-  const { dataRef, findDesiredData, handleData, socket } = useAppData();
+  const { dataRef, findDesiredData, handleData, socket, socketData } = useAppData();
   const dateFormat = JSON.parse(getObjectById(dataRef.current, 'Locale'));
   const { ShortDate, Thousand, Decimal: decimalSeparator } = dateFormat?.Properties;
   const [inputValue, setInputValue] = useState(
@@ -23,6 +25,31 @@ const GridEdit = ({ data }) => {
   const [selectedDate, setSelectedDate] = useState(
     FieldType == 'Date' ? dayjs(calculateDateAfterDays(data?.value)) : new Date()
   );
+
+
+  const handleSelect = (event) => {
+    console.log({event})
+    const input = event.target;
+    const start = input.selectionStart + 1;
+    const end = input.selectionEnd + 1;
+    const selectedText = input.value.substring(start, end);
+    console.log({data, input, start, end})
+
+    localStorage.setItem(data?.typeObj?.ID, JSON.stringify({Event: {Info: [start, end]}}))
+    handleData(
+      {
+        ID: data?.typeObj?.ID,
+        Properties: {
+          SelText: [start, end],
+        },
+      },
+      'WS'
+    );
+    
+    // setSelection(selectedText);
+    // setStartIndex(start);
+    // setEndIndex(end);
+  };
 
   const triggerCellChangedEvent = () => {
     // const gridEvent = findDesiredData(data?.gridId);
@@ -306,6 +333,7 @@ const GridEdit = ({ data }) => {
             }}
             decimalScale={Decimal}
             value={inputValue}
+            onSelect={handleSelect}
             decimalSeparator={decimalSeparator}
             thousandSeparator={Thousand}
             onBlur={(e) => {
@@ -346,6 +374,7 @@ const GridEdit = ({ data }) => {
         <input
           type='text'
           id={`${data?.typeObj?.ID}.r${data?.row + 1}.c${data?.column + 1}`}
+          // ref={inputRef}
           style={{
             outline: 0,
             border: 0,
@@ -354,6 +383,7 @@ const GridEdit = ({ data }) => {
             backgroundColor: data?.backgroundColor,
             paddingLeft: '5px',
           }}
+          onSelect={handleSelect}
           onDoubleClick={(e) => {
             e.stopPropagation();
             // setIsEditable(true);
