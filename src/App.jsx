@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { AppDataContext } from './context';
 import { SelectComponent } from './components';
 import {
@@ -6,9 +6,11 @@ import {
   checkSupportedProperties,
   findFormParentID,
   deleteFormAndSiblings,
+  rgbColor,
 } from './utils';
 import './App.css';
 import * as _ from 'lodash';
+import MsgBox from './components/MessageBox';
 
 function useForceRerender() {
   const [_state, setState] = useState(true);
@@ -27,6 +29,9 @@ const App = () => {
   const webSocketRef = useRef(null);
   const [focusedElement, setFocusedElement] = useState(null);
   const { reRender } = useForceRerender();
+  const [messageBoxData, setMessageBoxData] = useState(null);
+  const [options, setOptions] = useState(null)
+  let colors = {}
 
   const dataRef = useRef({});
   const appRef = useRef(null);
@@ -71,6 +76,59 @@ const App = () => {
     };
   }, []);
 
+  // Helper function to get color from the index
+  function getColor(index, defaultColor) {
+    // console.log("property getcolor",colors, index, colors?.[index])
+    return colors?.[index] || defaultColor; // Fallback to default if not found
+  }
+
+  function getRequiredRGBChannel(val) {
+    // console.log("compare initial value", val);
+    if (typeof val === 'number'){
+      val = [val]
+    }
+
+    const newValue = val?.map((value) => {
+      // console.log("property_map1", value);
+  
+      // Check if the value is an array of arrays or an array of numbers
+      if (Array.isArray(value) && value?.every((item) => typeof item === 'number' && item >= 0)) {
+        // console.log("property condition 2")
+        // Case 3: Array of numbers (e.g., [-1, 0])
+        return value;
+      }
+
+      if(typeof value === "number" && value < 0){
+        return getColor(value)
+      }
+
+      if(typeof value === "number" && value >= 0){
+        return value;
+      }
+      
+      // console.log("compare property here", value)
+      const modifiedValue = value?.map((nestVal) => {
+        // console.log("property here")
+        if (Array.isArray(nestVal)) {
+          // Nested array (e.g., [-5, [255, 0, 0]])
+          return nestVal.map((item) => (typeof item === 'number' && item < 0 ? getColor(item) : item));
+        } else if (typeof nestVal === 'number' && nestVal < 0) {
+          // Single negative number (e.g., -6)
+          return getColor(nestVal);
+        } else {
+          // Otherwise, return the value as is
+          // console.log("property else")
+          return nestVal;
+        }
+      });
+  
+      // console.log("property_modified", modifiedValue);
+      return modifiedValue;
+    });
+    // console.log('compare final', newValue)
+    return newValue
+  }
+
   const handleData = (data, mode) => {
     const splitID = data.ID.split('.');
 
@@ -88,13 +146,14 @@ const App = () => {
 
     // Check if the key already exists at the final level
     const finalKey = splitID[splitID.length - 1];
-    if (currentLevel.hasOwnProperty(finalKey)) {
+    if (currentLevel.hasOwnProperty(finalKey)) 
+      {
       if (mode === 'WC') {
         if (data.Properties && data.Properties.Type === 'Form') {
           localStorage.clear();
         }
         // Overwrite the existing object with new properties
-
+        
         currentLevel[finalKey] = {
           ID: data.ID,
           ...data,
@@ -112,11 +171,31 @@ const App = () => {
         };
       }
     } else {
+      let newData = JSON.parse(JSON.stringify(data))
       // Create a new object at the final level
+      try{
+        if(data.Properties.hasOwnProperty('FillCol') || data.Properties.hasOwnProperty('FCol') || data.Properties.hasOwnProperty('BCol') ) {
+          // console.log('compare', {_property_before: data?.Properties, colors})
+          newData = {
+            ...data,
+            Properties:{
+              ...data?.Properties,
+              ...data?.Properties?.FillCol && ({FillCol: getRequiredRGBChannel(data.Properties.FillCol)}),
+              ...data?.Properties?.FCol && ({FCol: getRequiredRGBChannel(data.Properties.FCol)}),
+              ...data?.Properties?.BCol && ({BCol: getRequiredRGBChannel(data.Properties.BCol)})
+            }
+          }
+          // console.log('compare', {_property_after: newData?.Properties})
+        }
+      }catch(error){
+        console.log({error})
+      }
+      
       currentLevel[finalKey] = {
         ID: data.ID,
-        ...data,
+        ...newData,
       };
+      // console.log('compare', {data, newData})
     }
 
     reRender();
@@ -206,6 +285,7 @@ const App = () => {
       const keys = Object.keys(JSON.parse(event.data));
       if (keys[0] == 'WC') {
         let windowCreationEvent = JSON.parse(event.data).WC;
+        // console.log({windowCreationEvent})
         if (windowCreationEvent?.Properties?.Type == 'Form') {
           localStorage.clear();
           const updatedData = deleteFormAndSiblings(dataRef.current);
@@ -215,9 +295,17 @@ const App = () => {
           return;
         }
 
+        // Handle Message Box separately
+      if (windowCreationEvent?.Properties?.Type == 'MsgBox') {
+        setMessageBoxData(windowCreationEvent);
+        // handleData(JSON.parse(event.data).WC, 'WC');
+        return;
+      }
+
         // console.log('event from server WC', JSON.parse(event.data).WC);
         setSocketData((prevData) => [...prevData, JSON.parse(event.data).WC]);
         handleData(JSON.parse(event.data).WC, 'WC');
+
       } else if (keys[0] == 'WS') {
         const serverEvent = JSON.parse(event.data).WS;
 
@@ -230,6 +318,8 @@ const App = () => {
             value = serverEvent?.Properties.Text;
           } else if (serverEvent?.Properties.hasOwnProperty('Value')) {
             value = serverEvent?.Properties.Value;
+          }else if (serverEvent?.Properties.hasOwnProperty('SelText')) {
+            value = serverEvent?.Properties.SelText;
           }
           // Check that the Already Present Data have Text Key or Value Key
           if (data?.Properties.hasOwnProperty('Text')) {
@@ -255,6 +345,18 @@ const App = () => {
               'WS'
             );
           }
+          //  else if (data?.Properties.hasOwnProperty('SelText')) {
+          //   setSocketData((prevData) => [...prevData, JSON.parse(event.data).WS]);
+          //   return handleData(
+          //     {
+          //       ID: serverEvent.ID,
+          //       Properties: {
+          //         SelText: value,
+          //       },
+          //     },
+          //     'WS'
+          //   );
+          // }
         }
 
         if (data?.Properties?.Type == 'Combo') {
@@ -278,12 +380,16 @@ const App = () => {
         }
 
         setSocketData((prevData) => [...prevData, JSON.parse(event.data).WS]);
+        // serverEvent.ID == "F1.LEFTRIGHT" && console.log("horizontal ws ", {WSThumbValue: JSON.parse(event.data).WS.Properties.Thumb})
         handleData(JSON.parse(event.data).WS, 'WS');
       } else if (keys[0] == 'WG') {
         const serverEvent = JSON.parse(event.data).WG;
+        // console.log({serverEvent})
 
         const refData = JSON.parse(getObjectById(dataRef.current, serverEvent?.ID));
+        // serverEvent.ID == "F1.LEFTRIGHT" &&  console.log("horizontal wg", serverEvent.ID, getObjectById(dataRef.current, serverEvent?.ID))
         const Type = refData?.Properties?.Type;
+        // console.log("issue refData", {refData, Type})
 
         // If didn't have any type on WG then return an ErrorMessage
 
@@ -301,6 +407,7 @@ const App = () => {
 
         if (Type == 'Grid') {
           const { Values } = Properties;
+          console.log("values", { Values})
 
           const supportedProperties = ['Values', 'CurCell'];
 
@@ -323,15 +430,16 @@ const App = () => {
               },
             });
             
-            console.log(event);
+            // serverEvent.ID == "F1.LEFTRIGHT" && console.log("horizontal event", event);
             return webSocket.send(event);
           }
 
           const { Event } = JSON.parse(localStorage.getItem(serverEvent.ID));
           const serverPropertiesObj = {};
           serverEvent.Properties.map((key) => {
-            return (serverPropertiesObj[key] = Event[key]);
+            return (serverPropertiesObj[key] = Event[key] || refData?.Properties?.[key]);
           });
+          // console.log("issue check properties", {local: serverPropertiesObj, app: Properties})
 
           // Values[Row - 1][Col - 1] = Value;
           console.log(
@@ -432,7 +540,7 @@ const App = () => {
 
         if (Type == 'Edit') {
           const { Text, Value } = Properties;
-          const supportedProperties = ['Text', 'Value'];
+          const supportedProperties = ['Text', 'Value', 'SelText'];
 
           const result = checkSupportedProperties(supportedProperties, serverEvent?.Properties);
 
@@ -482,8 +590,8 @@ const App = () => {
           const { Event } = JSON.parse(localStorage.getItem(serverEvent?.ID));
           const { Info } = Event;
           const serverPropertiesObj = {};
-          serverEvent.Properties.map((key) => {
-            return (serverPropertiesObj[key] = key == 'Value' ? Info : Info.toString());
+          serverEvent.Properties.map((key) => { 
+            return (serverPropertiesObj[key] = key == 'Value' ? Info : key == 'SelText' ? Info: Info.toString());
           });
 
           console.log(
@@ -722,7 +830,7 @@ const App = () => {
               WG: {
                 ID: serverEvent.ID,
                 Properties: {
-                  Thumb: Info[1],
+                  Thumb: Thumb,
                 },
                 WGID: serverEvent.WGID,
                 ...(result && result.NotSupported && result.NotSupported.length > 0
@@ -810,7 +918,6 @@ const App = () => {
 
           const result = checkSupportedProperties(supportedProperties, serverEvent?.Properties);
 
-          console.log('server', serverEvent);
 
           if (!localStorage.getItem(serverEvent.ID)) {
             const serverPropertiesObj = {};
@@ -998,7 +1105,6 @@ const App = () => {
         }
       } else if (keys[0] == 'NQ') {
         const nqEvent = JSON.parse(event.data).NQ;
-
         const { Event, ID, Info, NoCallback = 0 } = nqEvent;
 
         const appElement = getObjectById(dataRef.current, ID);
@@ -1044,13 +1150,25 @@ const App = () => {
             {
               ID: ID,
               Properties: {
-                CurCell: Info,
+                CurCell: [Info[0], Info[1]],
               },
             },
             'WS'
           );
-          reRender();
+          localStorage.setItem(
+            ID,
+            JSON.stringify({
+              Event: {
+                CurCell: [Info[0], Info[1]],
+              },
+            })
+          );
+          // reRender();
           return;
+        }
+        else if (Event == 'Select'){
+          const element = document.getElementById(nqEvent.ID)
+          if(element) element.click()
         }
 
         const element = document.getElementById(nqEvent.ID);
@@ -1059,7 +1177,6 @@ const App = () => {
       else if (keys[0] == "EC"){
         const serverEvent = JSON.parse(event.data).EC;
         const { EventID, Proceed } = serverEvent
-        console.log("waiting", {EventID, Proceed})
         setProceedEventArray((prev) => ({...prev, [EventID]: Proceed}));
         setProceed(Proceed)
         localStorage.setItem(EventID, Proceed);
@@ -1070,8 +1187,7 @@ const App = () => {
         deleteObjectsById(dataRef.current, serverEvent?.ID);
       } else if (keys[0] == 'WX') {
         const serverEvent = JSON.parse(event.data).WX;
-
-        const { Method, Info, WGID } = serverEvent;
+        const { Method, Info, WGID, ID } = serverEvent;
         const calculateTextDimensions = (wordsArray, fontSize = 11) => {
           // Create a hidden div element to calculate text dimensions
           const container = document.createElement('div');
@@ -1111,6 +1227,15 @@ const App = () => {
           const event = JSON.stringify({ WX: { Info: textDimensions, WGID } });
           console.log(event);
           return webSocket.send(event);
+        } else if (Method == 'OnlyDQ'){
+          let event
+          if( !!Info?.[0] ){
+            event = JSON.stringify( { WX:{Info: [[ID, 150, 300]] , WGID: WGID}} );
+          }
+          else{
+            event = JSON.stringify( { WX:{Info: [] ,"WGID": WGID}} );
+          }
+          webSocket.send(event);
         } else if (Method == 'GetFocus') {
           const focusedID = localStorage.getItem('current-focus');
           const event = JSON.stringify({ WX: { Info: !focusedID ? [] : [focusedID], WGID } });
@@ -1119,6 +1244,8 @@ const App = () => {
         }
       } else if (keys[0] == 'Options') {
         handleData(JSON.parse(event.data).Options, 'WC');
+        JSON.parse(event.data).Options.ID == 'Mode' && setOptions(JSON.parse(event.data).Options.Properties)
+        if(JSON.parse(event.data).Options.ID == 'Colors') setColorFunc(JSON.parse(event.data).Options.Properties.Standard)
       } else if (keys[0] == 'FormatCell') {
         const formatCellEvent = JSON.parse(event.data);
         const { FormatCell } = formatCellEvent;
@@ -1160,10 +1287,25 @@ const App = () => {
   // const updatedData = _.cloneDeep(dataRef.current);
   console.log('App', dataRef.current);
 
+  const setColorFunc = (colorStandardArray)=>{
+    const reqColors = colorStandardArray?.reduce((prev, current)=>{
+      return {...prev, [current?.[0]]: current[2] }
+    },{})
+    colors = {...reqColors}
+  }
+
   const formParentID = findFormParentID(dataRef.current);
+  
+  const handleMsgBoxClose = (button, ID) => {
+    // console.log(`Button pressed: ${button}`);
+    setMessageBoxData(null);
+    // Send event back to server via WebSocket
+    socket.send(JSON.stringify({Event: { EventName: button, ID: ID }}));
+  };
+
 
   return (
-    <div ref={appRef}>
+    <div>
       <AppDataContext.Provider
         value={{
           socketData,
@@ -1176,11 +1318,16 @@ const App = () => {
           setProceed,
           proceedEventArray,
           setProceedEventArray,
+          colors
         }}
       >
         {dataRef && formParentID && <SelectComponent data={dataRef.current[formParentID]} />}
       </AppDataContext.Provider>
+      {messageBoxData && (
+        <MsgBox data = { messageBoxData } options = {options} onClose = { handleMsgBoxClose } isDesktop = { dataRef?.current?.Mode?.Properties?.Desktop} />
+      )}
     </div>
+
   );
 };
 

@@ -26,7 +26,7 @@ const VerticalSplitter = ({ data }) => {
         : 0;
     calculateLeft = Math.max(0, Math.min(calculateLeft, dimensions.width - 3));
 
-    console.log({ calculateLeft });
+    // console.log({ calculateLeft });
 
     setPosition({ left: calculateLeft });
     const rightWidth = dimensions.width - (calculateLeft + 3);

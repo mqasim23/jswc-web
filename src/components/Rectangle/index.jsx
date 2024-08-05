@@ -7,7 +7,7 @@ const Rectangle = ({
   posn = [0, 0],
 }) => {
   const { Points, Size, FCol, Radius, Visible, FStyle, FillCol } = data?.Properties;
-
+  
   const pointsArray = Points && Points[0].map((y, i) => [Points[1][i], y]);
   const sizeArray = Size && Size[0].map((y, i) => [Size[1][i], y]);
 
@@ -32,8 +32,8 @@ const Rectangle = ({
               ry={Radius && Radius[index * 0]}
               x={rectanglePoints[0]}
               y={rectanglePoints[1]}
-              width={sizeArray && sizeArray[index][0]}
-              height={sizeArray && sizeArray[index][1]}
+              width={sizeArray && sizeArray[index][0] + 1}
+              height={sizeArray && sizeArray[index][1] + 1}
               fill={
                 !FStyle
                   ? 'none'

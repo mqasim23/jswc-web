@@ -177,13 +177,37 @@ export const findParentIndex = (depthArray, parentNumber) => {
 };
 
 export const rgbColor = (rgbArray) => {
-  if (rgbArray?.length !== 3) {
-    return;
-  }
+  try {
+    // Check if the input is a valid RGB array
+    if (
+      !Array.isArray(rgbArray) ||
+      (rgbArray.length !== 3 && !(Array.isArray(rgbArray[0]) && rgbArray[0].length === 3))
+    ) {
+      // console.log("Invalid RGB array");
+      return null;
+    }
 
-  const [r, g, b] = rgbArray;
-  return `rgb(${r}, ${g}, ${b})`;
+    // Handle nested RGB array case
+    if (Array.isArray(rgbArray[0]) && rgbArray[0].length === 3) {
+      rgbArray = rgbArray[0];
+    }
+
+    // console.log("Processed RGB array", { rgbArray });
+    const [r, g, b] = rgbArray;
+
+    // Ensure all values are within the valid RGB range (0-255)
+    if ([r, g, b].some(color => color < 0 || color > 255)) {
+      // console.log("RGB values out of range");
+      return null;
+    }
+
+    return `rgb(${r}, ${g}, ${b})`;
+  } catch (error) {
+    console.log("rgb error", error);
+    return null;
+  }
 };
+
 
 export const calculateDateAfterDays = (days) => {
   // Start date: 1900-1-1

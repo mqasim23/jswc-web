@@ -8,7 +8,7 @@ import {
   getObjectById,
   getObjectTypeById,
 } from '../../utils';
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useAppData } from '../../hooks';
 import dayjs from 'dayjs';
 import { NumericFormat } from 'react-number-format';
@@ -56,29 +56,29 @@ const Edit = ({
   const font = findDesiredData(FontObj && FontObj);
   const fontProperties = font && font?.Properties;
 
-  const decideInputValue = () => {
-    if (location == 'inGrid') {
-      if (FieldType == 'Date') {
+  const decideInputValue = useCallback(() => {
+    if (location === 'inGrid') {
+      if (FieldType === 'Date') {
         setEmitValue(value);
         setInitialValue(value);
-
-        const date = calculateDateAfterDays(value);
-
-        return setInputValue(dayjs(date).format(ShortDate && ShortDate));
+        const date = calculateDateAfterDays(value); // Custom function to calculate date
+        return setInputValue(dayjs(date).format(ShortDate));
       }
 
-      if (FieldType == 'LongNumeric') {
+      if (FieldType === 'LongNumeric') {
         setEmitValue(value);
         setInitialValue(value);
         return setInputValue(value);
       }
+
       setEmitValue(value);
       setInitialValue(value);
       return setInputValue(value);
     }
+
     if (hasTextProperty) {
       if (isPassword) {
-        setInitialValue(generateAsteriskString(data?.Properties?.Text?.length));
+        setInitialValue(generateAsteriskString(data?.Properties?.Text?.length)); // Custom function to generate asterisks
         setEmitValue(data?.Properties?.Text);
         return setInputValue(generateAsteriskString(data?.Properties?.Text?.length));
       } else {
@@ -87,9 +87,10 @@ const Edit = ({
         return setInputValue(data?.Properties?.Text);
       }
     }
+
     if (hasValueProperty) {
       if (isPassword) {
-        setInitialValue(generateAsteriskString(data?.Properties?.Value?.length));
+        setInitialValue(generateAsteriskString(data?.Properties?.Value?.length)); // Custom function to generate asterisks
         setEmitValue(data?.Properties?.Value);
         return setInputValue(generateAsteriskString(data?.Properties?.Value?.length));
       } else {
@@ -98,7 +99,7 @@ const Edit = ({
         return setInputValue(data?.Properties?.Value);
       }
     }
-  };
+  }, [location, FieldType, value, ShortDate, hasTextProperty, isPassword, data, hasValueProperty]);
 
   // check that the Edit is in the Grid or not
 
@@ -108,23 +109,23 @@ const Edit = ({
     }
   };
 
-  const decideInputType = () => {
-    if (FieldType == 'Numeric') {
+  const decideInputType = useCallback(() => {
+    if (FieldType === 'Numeric') {
       setInputType('number');
-    } else if (FieldType == 'Date') {
+    } else if (FieldType === 'Date') {
       setInputType('date');
     } else if (isPassword) {
       setInputType('password');
     }
-  };
+  }, [FieldType, isPassword]);
 
   useEffect(() => {
     decideInputType();
-  }, []);
+  }, [decideInputType]);
 
   useEffect(() => {
     decideInputValue();
-  }, [data]);
+  }, [decideInputValue]);
 
   // Checks for the Styling of the Edit Field
 
@@ -199,8 +200,6 @@ const Edit = ({
     const nextSibling = grandParent.previousSibling;
 
     const querySelector = getObjectTypeById(dataRef.current, nextSibling?.id);
-    console.log(nextSibling?.id);
-    console.log(querySelector);
     const element = nextSibling?.querySelectorAll(querySelector);
 
     triggerCellMoveEvent(parseInt(row), parseInt(column) + 1, emitValue);
@@ -281,7 +280,10 @@ const Edit = ({
             : emitValue,
       },
     });
+    console.log({event2})
     localStorage.setItem(data?.ID, event2);
+    socket.send(event2)
+    
     const exists = Event && Event.some((item) => item[0] === 'Change');
     if (!exists) return;
 

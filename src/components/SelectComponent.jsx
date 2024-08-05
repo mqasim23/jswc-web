@@ -33,6 +33,7 @@ import SubForm from './DynamicSubForm';
 import Image from './Image';
 import { useAppData } from '../hooks';
 import Chart from './Chart';
+import MessageBox from './MessageBox';
 
 const SelectComponent = ({
   data,
@@ -166,6 +167,7 @@ const SelectComponent = ({
   if (data?.Properties?.Type == 'Ellipse') return <Ecllipse data={data} />;
   if (data?.Properties?.Type == 'Circle') return <Circle data={data} />;
   if (data?.Properties?.Type == 'ApexChart') return <Chart data={data} />;
+  if (data?.Properties?.Type == 'MsgBox') return <MessageBox data= {data} />;
 };
 
 export default SelectComponent;

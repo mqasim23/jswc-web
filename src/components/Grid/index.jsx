@@ -323,7 +323,7 @@ const Grid = ({ data }) => {
     proceedEventArray,
     setProceedEventArray
   } = useAppData();
-  console.log("waiting", { proceed, setProceed, proceedEventArray });
+  // console.log("waiting", { proceed, setProceed, proceedEventArray });
 
   const [eventId, setEventId] = useState(null);
 
@@ -365,12 +365,33 @@ const Grid = ({ data }) => {
   const [width, setWidth] = useState(Size[1]);
   const [rows, setRows] = useState(0);
   const [columns, setColumns] = useState(0);
+  let defaultRow = !CurCell ? (RowTitles?.length > 0 ? 1 : 0) : CurCell[0]
+  let defaultCol =  !CurCell ? (RowTitles?.length > 0 ? 1 : 0) : CurCell[1]
   const [selectedRow, setSelectedRow] = useState(
     !CurCell ? (RowTitles?.length > 0 ? 1 : 0) : CurCell[0]
   );
   const [selectedColumn, setSelectedColumn] = useState(
     !CurCell ? (RowTitles?.length > 0 ? 1 : 0) : CurCell[1]
   );
+
+  useEffect(() => {
+    if (CurCell) {
+      let defaultRow = !CurCell ? (RowTitles?.length > 0 ? 1 : 0) : CurCell[0]
+      let defaultCol =  !CurCell ? (RowTitles?.length > 0 ? 1 : 0) : CurCell[1]
+      setSelectedRow((prev) => prev !== CurCell[0] ? defaultRow : prev);
+      setSelectedColumn((prev) => prev !== CurCell[1] ? defaultCol : prev);
+    }
+  }, [CurCell]);
+  
+  // useEffect(()=>{
+  //   let defaultRow = !CurCell ? (RowTitles?.length > 0 ? 1 : 0) : CurCell[0]
+  //   let defaultCol =  !CurCell ? (RowTitles?.length > 0 ? 1 : 0) : CurCell[1]
+  //   setSelectedRow( defaultRow === 0 ? 0: defaultRow  )
+  //   setSelectedColumn( defaultCol === 0 ? 0: defaultCol -1 )
+    
+  // },[])
+  // console.log("issue arrow nq", CurCell, selectedRow, selectedColumn)
+
 
   const style = setStyle(data?.Properties);
 
@@ -389,7 +410,7 @@ const Grid = ({ data }) => {
 
   const handleCellMove = (row, column, mouseClick) => {
     if (column > columns || column == 0) return;
-    console.log("waiting handle cell move", row, column)
+    // console.log("waiting handle cell move", row, column, selectedRow, selectedColumn)
     const cellChanged = JSON.parse(localStorage.getItem("isChanged"));
     const cellMoveEvent = JSON.stringify({
       Event: {
@@ -409,7 +430,6 @@ const Grid = ({ data }) => {
 
     const exists = Event && Event?.some((item) => item[0] === "CellMove");
     if (!exists) return;
-    console.log( "waiting handle cell move event", cellMoveEvent);
     socket.send(cellMoveEvent);
     localStorage.setItem(
       "isChanged",
@@ -419,15 +439,14 @@ const Grid = ({ data }) => {
       })
     );
   };
-
+  
   const waitForProceed = (localStorageBool) => {
     return new Promise((resolve) => {
       const checkProceed = () => {
         if (localStorageBool || proceed !== null) {
-          console.log("waiting checking proceed event",eventId, proceedEventArray[eventId], proceedEventArray, )
+          // console.log("waiting checking proceed event",eventId, proceedEventArray[eventId], proceedEventArray, )
           if (localStorageBool || proceedEventArray[eventId] === 1) {
             resolve();
-            console.log({proceedEventArray})
             setProceed(false);
             setProceedEventArray((prev) => ({ ...prev, [eventId]: 0 }));
           } else {
@@ -453,9 +472,20 @@ const Grid = ({ data }) => {
     setEventId(eventId);
     let shiftState = isAltPressed + isCtrlPressed + isShiftPressed;
 
-    const exists = Event && Event?.some((item) => item[0] === "KeyPress");
+    const parentExists = Event && Event?.some((item) => item[0].toLowerCase() === "keypress");
 
-    const keyPressEvent = JSON.stringify({
+    let keys = Object.keys(data)
+    let childKey
+    const checkArray = keys.reduce((prev, current)=> {
+      if(data[current]?.Properties?.Event?.some((item) => item[0].toLowerCase() === "keypress")) childKey = current
+      return [...prev, data[current]?.Properties?.Event?.some((item) => item[0].toLowerCase() === "keypress")]
+    },[])
+    const childExists = checkArray.some(item => item === true)
+
+
+    // const childExists = data?.E1?.Properties?.Event?.some((item) => item[0].toLowerCase() === "keypress")
+
+    const parentKeyPressEvent = JSON.stringify({
       Event: {
         EventName: "KeyPress",
         ID: data?.ID,
@@ -464,8 +494,21 @@ const Grid = ({ data }) => {
       },
     });
 
-    if (exists) {
-      console.log("keypressevent", keyPressEvent);
+
+    const keyPressEvent = JSON.stringify({
+      Event: { 
+        EventName: "KeyPress",
+        ID: data[childKey]?.ID,
+        EventID: eventId,
+        Info: [event.key, charCode, event.keyCode, shiftState],
+      },
+    });
+
+    if(parentExists && !!!childExists){
+      socket.send(parentKeyPressEvent)
+    }
+
+    if (childExists) {
       socket.send(keyPressEvent);
     }
 
@@ -485,16 +528,18 @@ const Grid = ({ data }) => {
     }
 
     let localStoragValue = JSON.parse(localStorage.getItem(data?.ID));
-    console.log("waiting initial local storage", localStoragValue)
+    // console.log("waiting initial local storage", localStoragValue)
+
 
     const updatePosition = async () => {
       if (event.key === "ArrowRight") {
-        console.log("waiting in handle key down", { proceed, setProceed, proceedEventArray });
-        console.log("waiting local storage getitem", localStorage.getItem(eventId))
-        console.log("waiting starting arrow right")
-        if (exists)  await waitForProceed(localStorage.getItem(eventId));
-        console.log("waiting await proceed done")
+        if (childExists || parentExists)  await waitForProceed(localStorage.getItem(eventId));
+        // console.log("waiting await proceed done")
+        // console.log("issue arrow right initial", {selectedRow, selectedColumn})
         setSelectedColumn((prev) => Math.min(prev + 1, columns));
+        // console.log("issue arrow right", {selectedRow, selectedColumn, columns, selectedColumn:  RowTitles?.length > 0
+        //   ? selectedColumn + 1
+        //   : selectedColumn + 1 })
         if (!localStoragValue) {
           console.log("writing local storage", JSON.stringify({
             Event: {
@@ -524,8 +569,7 @@ const Grid = ({ data }) => {
         } 
         else {
           if (RowTitles?.length > 0 && selectedColumn == columns) return;
-          console.log("writing local storage")
-          console.log("writing local storage", JSON.stringify({
+          console.log(JSON.stringify({
             Event: {
               CurCell: [
                 selectedRow,
@@ -559,10 +603,13 @@ const Grid = ({ data }) => {
           0
         );
       } else if (event.key === "ArrowLeft") {
-        if (exists) await waitForProceed();
+        if (childExists || parentExists) await waitForProceed(localStorage.getItem(eventId));
+        // console.log("issue arrow left prev", {selectedRow, selectedColumn})
         setSelectedColumn((prev) =>
           Math.max(prev - 1, RowTitles?.length > 0 ? 1 : 0)
         );
+        // console.log("issue arrow left", {selectedRow, selectedColumn, columns, selectedColumn:  RowTitles?.length > 0 ? selectedColumn - 1 : selectedColumn})
+        
         if (!localStoragValue) {
           if (RowTitles?.length > 0 && selectedColumn == 1) return;
 
@@ -598,7 +645,7 @@ const Grid = ({ data }) => {
           0
         );
       } else if (event.key === "ArrowUp") {
-        if (exists) await waitForProceed();
+        if (childExists || parentExists) await waitForProceed(localStorage.getItem(eventId));
         setSelectedRow((prev) => Math.max(prev - 1, 1));
         if (!localStoragValue) {
           if (selectedRow == 1 && RowTitles?.length > 0) return;
@@ -635,7 +682,7 @@ const Grid = ({ data }) => {
           0
         );
       } else if (event.key === "ArrowDown") {
-        if (exists) await waitForProceed();
+        if (childExists || parentExists) await waitForProceed(localStorage.getItem(eventId));
         setSelectedRow((prev) => Math.min(prev + 1, rows - 1));
         if (!localStoragValue) {
           if (selectedRow == rows - 1) return;
@@ -849,6 +896,7 @@ const Grid = ({ data }) => {
   };
 
   const handleCellClick = (row, column) => {
+    // console.log("issue cellclick", {row, column})
     setSelectedColumn(column);
     setSelectedRow(row);
 
@@ -934,6 +982,7 @@ const Grid = ({ data }) => {
           return (
             <div style={{ display: "flex" }} id={`row-${rowi}`}>
               {row.map((data, columni) => {
+                //  selectedRow === rowi && console.log("issue arrow focus", selectedRow, rowi )
                 const isFocused =
                   selectedRow === rowi && selectedColumn === columni;
 
@@ -957,9 +1006,10 @@ const Grid = ({ data }) => {
                       minWidth: `${data?.width}px`,
                       maxWidth: `${data?.width}px`,
                       minheight: `${data?.height}px`,
-                      maxheight: `${data?.height}px`,
+                      maxheight: `${data
+                        ?.height}px`,
                       backgroundColor:
-                        selectedColumn === columni && data.type == "header"
+                      (selectedRow === rowi && data.type == "cell") || (selectedColumn === columni && data.type == "header" )
                           ? "lightblue"
                           : rgbColor(data?.backgroundColor),
                       textAlign: data.type == "header" ? "center" : "left",

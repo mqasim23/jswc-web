@@ -6,9 +6,10 @@ const TabButton = ({ data, handleTabClick, activeTab, bgColor, fontColor, active
   const { Caption, Event } = data?.Properties;
 
   const emitEvent = Event && Event[0];
-
+  
   return (
     <div
+      id={data.ID}
       style={{
         border: '1px solid #DFDFDF',
         fontSize: '11px',

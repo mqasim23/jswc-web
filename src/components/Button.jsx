@@ -228,14 +228,12 @@ const Button = ({
 
   const handleRightArrow = () => {
     if (location !== 'inGrid') return;
-    console.log(inputRef);
     const parent = inputRef.current.parentElement;
     const grandParent = parent.parentElement;
     const nextSibling = grandParent.nextSibling;
     const querySelector = getObjectTypeById(dataRef.current, nextSibling?.id);
     triggerCellMoveEvent(row, column + 1);
     const element = nextSibling?.querySelectorAll(querySelector);
-    console.log({ element });
 
     if (querySelector == 'select') return element && element[0].focus();
 

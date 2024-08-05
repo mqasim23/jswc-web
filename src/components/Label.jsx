@@ -1,4 +1,4 @@
-import { setStyle } from '../utils';
+import { rgbColor, setStyle } from '../utils';
 import '../styles/font.css';
 import { useAppData } from '../hooks';
 
@@ -8,7 +8,9 @@ const Label = ({ data, gridValue }) => {
   const haveColor = data?.Properties.hasOwnProperty('FCol');
   const haveFontProperty = data?.Properties.hasOwnProperty('Font');
 
-  const { Visible, FontObj, Caption, Size } = data?.Properties;
+  const { Visible, FontObj, Caption, Size, BCol } = data?.Properties;
+  // console.log("label", {data, BCol, Caption,  background: rgbColor(BCol)})
+
 
   if (haveColor) {
     styles = {
@@ -37,6 +39,9 @@ const Label = ({ data, gridValue }) => {
         : 'none',
       fontStyle: !fontProperties?.Italic ? 'none' : fontProperties?.Italic == 1 ? 'italic' : 'none',
       fontWeight: !fontProperties?.Weight ? 0 : fontProperties?.Weight,
+      background: BCol && rgbColor(BCol),
+      paddingLeft: '10px',
+      paddingRight: '10px'
     };
   }
 

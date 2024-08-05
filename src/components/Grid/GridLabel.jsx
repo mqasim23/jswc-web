@@ -10,7 +10,18 @@ const GridLabel = ({ data }) => {
     }
   }, [data.focused]);
 
+  useEffect(()=>{
+  }, [isEditable])
+
   const fontProperties = data?.cellFont && data?.cellFont?.Properties;
+
+  const handleBlur = () => {
+    setisEditable(false);
+  };
+
+  const handleDoubleClick = () => {
+    setisEditable(true);
+  };
 
   let fontStyles = {
     fontFamily: fontProperties?.PName,
@@ -30,9 +41,7 @@ const GridLabel = ({ data }) => {
     const isShiftPressed = e?.shiftKey ? 1 : 0;
     const charCode = e?.key?.charCodeAt(0);
     let shiftState = isAltPressed + isCtrlPressed + isShiftPressed;
-    console.log({ data });
 
-    console.log('Object', data?.typeObj?.Properties?.Event);
 
     const exists = data?.typeObj?.Properties?.Event?.some((item) => item[0] === 'KeyPress');
     if (!exists) return;
@@ -74,7 +83,8 @@ const GridLabel = ({ data }) => {
             e.stopPropagation();
             handleKeyPress(e);
           }}
-          onDoubleClick={() => setisEditable(true)}
+          onDoubleClick={handleDoubleClick}
+          onBlur={handleBlur}
         >
           {data?.formattedValue}
         </div>
@@ -91,10 +101,10 @@ const GridLabel = ({ data }) => {
             e.stopPropagation();
             handleKeyPress(e);
           }}
-          onBlur={() => setisEditable(false)}
+          onBlur={handleBlur}
           ref={labelRef}
         >
-          {data?.value}
+          {data?.focused?  data?.value: data?.formattedValue}
         </div>
       )}
     </>

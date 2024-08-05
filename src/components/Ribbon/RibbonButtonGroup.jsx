@@ -2,11 +2,13 @@ import * as AppIcons from './RibbonIcons';
 import { Row, Col } from 'reactstrap';
 import { useAppData } from '../../hooks';
 import { getObjectById } from '../../utils';
+import { MdOutlineQuestionMark } from 'react-icons/md';
 
 const CustomRibbonButtonGroup = ({ data }) => {
   const { socket, dataRef } = useAppData();
   const PORT = localStorage.getItem('PORT');
   let ImageList = JSON.parse(localStorage.getItem('ImageList'));
+
 
   const { Captions, Icons, Event, ImageIndex, ImageListObj } = data?.Properties;
 
@@ -30,15 +32,15 @@ const CustomRibbonButtonGroup = ({ data }) => {
     handleSelectEvent(info);
   };
 
+  let ImagesData
+
   if (ImageListObj) {
     if (Array.isArray(ImageListObj)) {
-      const ImagesData = ImageListObj?.map((id) => {
+      ImagesData = ImageListObj?.map((id) => {
         return id && JSON.parse(getObjectById(dataRef.current, id));
       });
 
-      const images = ImageIndex.map((imageIndex, index) => {
-        return ImagesData && ImagesData[index]?.Properties?.Files[imageIndex - 1];
-      });
+      // console.log({ ImagesData });
     } else {
       const ID = ImageListObj.split('.')[1];
       ImageList = ID && JSON.parse(getObjectById(dataRef.current, ID));
@@ -51,34 +53,41 @@ const CustomRibbonButtonGroup = ({ data }) => {
 
   // console.log({ AppIcons });
 
+  console.log({Captions, ImagesData})
+
+
+
   return (
     <Row>
       {Captions.map((title, i) => {
-        let IconComponent = AppIcons[Icons?.length > 0 ? Icons[i] : 'MdOutlineQuestionMark'];
+        
+        // i = 0
+        const imageIndex = i;
+        const image = ImagesData?.[imageIndex] || ImageList;
+        const iconKey = Icons?.[i] || 'MdOutlineQuestionMark';
+        const IconComponent = AppIcons?.[iconKey] || MdOutlineQuestionMark;
+
         return (
           <Col
-            id={data?.ID}
+            key={`col-${i}`}
+            id={`${data?.ID}-${i}`}
             md={colSize}
             className='d-flex align-items-center justify-content-center'
             style={{ cursor: 'pointer' }}
             onClick={() => handleButtonEvent(i + 1)}
           >
-            {
-              ImageIndex?.length > 0 ? (
-                <img
-                  style={{
-                    width: ImageList?.Properties?.Size && ImageList?.Properties?.Size[1],
-                    height: ImageList?.Properties?.Size && ImageList?.Properties?.Size[0],
-                  }}
-                  src={`http://localhost:${PORT}/${
-                    ImageList?.Properties?.Files[ImageIndex[i] - 1]
-                  }`}
-                />
-              ) : (
-                <IconComponent />
-              )
-              // null
-            }
+            {image ? (
+              <img
+                style={{
+                  width: ImageList?.Properties?.Size?.[1],
+                  height: ImageList?.Properties?.Size?.[0],
+                }}
+                src={`http://localhost:${PORT}/${image?.Properties?.Files?.[imageIndex]}`}
+                alt={title}
+              />
+            ) : (
+              <IconComponent size={35} />
+            )}
             <div style={{ fontSize: '12px', textAlign: 'center', textOverflow: 'ellipsis' }}>
               {title}
             </div>

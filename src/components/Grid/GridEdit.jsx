@@ -5,14 +5,17 @@ import { calculateDateAfterDays, getObjectById, calculateDaysFromDate } from '..
 import dayjs from 'dayjs';
 
 const GridEdit = ({ data }) => {
+  // console.log({data})
   const inputRef = useRef(null);
   const dateRef = useRef(null);
   const [isEditable, setIsEditable] = useState(false);
 
   const [dateFormattedValue, setDateFormattedValue] = useState(data?.value);
 
+
   const { FieldType, Decimal } = data?.typeObj?.Properties;
-  const { dataRef, findDesiredData, handleData, socket } = useAppData();
+  const { dataRef, findDesiredData, handleData, socket, socketData } = useAppData();
+  // data?.typeObj?.ID === "F1.Holdings.TEXT" && console.log("edit data", {data, dataRef, socketData, property: findDesiredData(data?.typeObj?.ID)})
   const dateFormat = JSON.parse(getObjectById(dataRef.current, 'Locale'));
   const { ShortDate, Thousand, Decimal: decimalSeparator } = dateFormat?.Properties;
   const [inputValue, setInputValue] = useState(
@@ -24,12 +27,38 @@ const GridEdit = ({ data }) => {
     FieldType == 'Date' ? dayjs(calculateDateAfterDays(data?.value)) : new Date()
   );
 
+
+  const handleSelect = (event) => {
+    console.log({event})
+    const input = event.target;
+    const start = input.selectionStart + 1;
+    const end = input.selectionEnd + 1;
+    const selectedText = input.value.substring(start, end);
+    console.log({data, input, start, end})
+
+    localStorage.setItem(data?.typeObj?.ID, JSON.stringify({Event: {Info: [start, end]}}))
+    handleData(
+      {
+        ID: data?.typeObj?.ID,
+        Properties: {
+          SelText: [start, end],
+        },
+      },
+      'WS'
+    );
+    
+    // setSelection(selectedText);
+    // setStartIndex(start);
+    // setEndIndex(end);
+  };
+
   const triggerCellChangedEvent = () => {
     // const gridEvent = findDesiredData(data?.gridId);
 
     const values = data?.gridValues;
 
-    values[data?.row - 1][data?.column] = FieldType == 'Date' ? dateFormattedValue : inputValue;
+    values[data?.row - 
+    1][data?.column] = FieldType == 'Date' ? dateFormattedValue : inputValue;
     // handleData(
     //   {
     //     ID: data?.gridId,
@@ -145,11 +174,42 @@ const GridEdit = ({ data }) => {
     };
     const handleDateChange = (event) => {
       setSelectedDate(event.target.value);
+
       const selectedDate = dayjs(event.target.value).format(ShortDate);
+      console.log("date picker",{input:event.target.value, ShortDate, selectedDate })
       let value = calculateDaysFromDate(event.target.value) + 1;
       setInputValue(selectedDate);
       setDateFormattedValue(value);
     };
+
+    const handleInputChange = (event) => {
+      setInputValue(event.target.value);
+    };
+
+    const handleDatePickerClick = () => {
+      inputRef.current.showPicker();
+    };
+  
+
+    const handleInputBlur = () => {
+      const [day, month, year] = inputValue.split('-');
+      const formattedDate = `${year}-${month}-${day}`; // Convert to standard format YYYY-MM-DD
+      const newDate = new Date(formattedDate)
+
+      const parsedDate = dayjs(newDate, ShortDate , true);
+      if (parsedDate.isValid()) {
+        const formattedDate = parsedDate.format('YYYY-MM-DD');
+        setSelectedDate(formattedDate);
+        const value = calculateDaysFromDate(formattedDate) + 1;
+        setDateFormattedValue(value);
+      } else {
+        // Handle invalid date input
+        console.warn('Invalid date entered');
+      }
+      setIsEditable(false);
+      handleEditEvents();
+    };
+
     return (
       <>
         {!isEditable ? (
@@ -163,6 +223,7 @@ const GridEdit = ({ data }) => {
           </div>
         ) : (
           <>
+          <div style={{ display: 'flex', alignItems: 'center'}}>
             <input
               ref={dateRef}
               id={`${data?.typeObj?.ID}.r${data?.row + 1}.c${data?.column + 1}`}
@@ -174,30 +235,41 @@ const GridEdit = ({ data }) => {
                 paddingLeft: '5px',
               }}
               value={inputValue}
+              onChange={handleInputChange}
               type='text'
-              readOnly
+              // readOnly
               onClick={(e) => {
-                e.stopPropagation();
-                handleTextClick();
+                // e.stopPropagation();
+                // handleTextClick();
               }}
-              onBlur={() => {
-                setIsEditable(false);
-                handleEditEvents();
-              }}
+              onBlur= { handleInputBlur }
               onKeyDown={(e) => {
                 e.stopPropagation();
               }}
             />
+             <button
+              onClick={handleDatePickerClick}
+              style={{
+                border: 'none',
+                background: 'transparent',
+                cursor: 'pointer',
+                padding: 0,
+              }}
+            >
+            📅
+          </button>
+          </div>
             <input
               id={`${data?.typeObj?.ID}.r${data?.row + 1}.c${data?.column + 1}`}
               type='date'
-              value={selectedDate}
+              value={dayjs(new Date(selectedDate)).format('YYYY-MM-DD')}
               ref={inputRef}
               onChange={handleDateChange}
               style={{
                 display: 'none',
               }}
             />
+           
           </>
         )}
       </>
@@ -262,6 +334,7 @@ const GridEdit = ({ data }) => {
             }}
             decimalScale={Decimal}
             value={inputValue}
+            onSelect={handleSelect}
             decimalSeparator={decimalSeparator}
             thousandSeparator={Thousand}
             onBlur={(e) => {
@@ -302,6 +375,7 @@ const GridEdit = ({ data }) => {
         <input
           type='text'
           id={`${data?.typeObj?.ID}.r${data?.row + 1}.c${data?.column + 1}`}
+          // ref={inputRef}
           style={{
             outline: 0,
             border: 0,
@@ -310,6 +384,7 @@ const GridEdit = ({ data }) => {
             backgroundColor: data?.backgroundColor,
             paddingLeft: '5px',
           }}
+          onSelect={handleSelect}
           onDoubleClick={(e) => {
             e.stopPropagation();
             // setIsEditable(true);

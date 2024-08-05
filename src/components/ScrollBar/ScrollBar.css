@@ -15,6 +15,7 @@
 
 .scroll-bar-icon-horizontal {
   transform: rotate(90deg);
+  
 }
 
 .scroll-bar {
@@ -105,8 +106,8 @@
 
 .icon-style {
   position: absolute;
-  width: 10px;
-  height: 10px;
+  /* width: 10px;
+  height: 10px; */
   text-align: center;
   background-color: #ccc;
   cursor: pointer;
