@@ -561,7 +561,20 @@ const App = () => {
                   //: editValue);
            // });
 
-            serverEvent.Properties.map((key) => { return (serverPropertiesObj[key] = key === 'Text' ? !editValue ? '' : editValue?.toString() : isNumber ? parseInt(editValue) : key === "SelText" ? (editValue ? editValue : [1, 1]) : editValue); });
+            serverEvent.Properties.map((key) => {
+              return (serverPropertiesObj[key] =
+                key === "Text"
+                  ? !editValue
+                    ? ""
+                    : editValue?.toString()
+                  : isNumber
+                  ? parseInt(editValue)
+                  : key === "SelText"
+                  ? editValue
+                    ? editValue
+                    : [1, 1]
+                  : editValue);
+            });
 
             console.log(
               JSON.stringify({
