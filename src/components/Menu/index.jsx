@@ -1,5 +1,5 @@
 import { excludeKeys, isEmpty } from '../../utils';
-import Dropdown from '../DropDown';
+import Dropdown from '../Dropdown/index';
 import './Menu.css';
 
 const Menu = ({ data }) => {

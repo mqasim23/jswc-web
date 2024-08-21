@@ -549,17 +549,19 @@ const App = () => {
 
             const isNumber = refData?.Properties?.hasOwnProperty('FieldType');
 
-            const serverPropertiesObj = {};
-            serverEvent.Properties.map((key) => {
-              return (serverPropertiesObj[key] =
-                key == 'Text'
-                  ? !editValue
-                    ? ''
-                    : editValue?.toString()
-                  : isNumber
-                  ? parseInt(editValue)
-                  : editValue);
-            });
+            //const serverPropertiesObj = {};
+            //serverEvent.Properties.map((key) => {
+             // return (serverPropertiesObj[key] =
+               // key == 'Text'
+                 // ? !editValue
+             //       ? ''
+               //     : editValue?.toString()
+                 // : isNumber
+                //  ? parseInt(editValue)
+                  //: editValue);
+           // });
+
+            serverEvent.Properties.map((key) => { return (serverPropertiesObj[key] = key === 'Text' ? !editValue ? '' : editValue?.toString() : isNumber ? parseInt(editValue) : key === "SelText" ? (editValue ? editValue : [1, 1]) : editValue); });
 
             console.log(
               JSON.stringify({
