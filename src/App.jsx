@@ -391,6 +391,8 @@ const App = () => {
         const Type = refData?.Properties?.Type;
         // console.log("issue refData", {refData, Type})
 
+        console.log("Type",{Type})
+
         // If didn't have any type on WG then return an ErrorMessage
 
         const errorEvent = JSON.stringify({
