@@ -542,6 +542,7 @@ const App = () => {
 
         if (Type == 'Edit') {
           const { Text, Value } = Properties;
+          console.log({Properties})
           const supportedProperties = ['Text', 'Value', 'SelText'];
 
           const result = checkSupportedProperties(supportedProperties, serverEvent?.Properties);
@@ -563,20 +564,18 @@ const App = () => {
                   //: editValue);
            // });
 
-            serverEvent.Properties.map((key) => {
-              return (serverPropertiesObj[key] =
-                key === "Text"
-                  ? !editValue
-                    ? ""
-                    : editValue?.toString()
-                  : isNumber
-                  ? parseInt(editValue)
-                  : key === "SelText"
-                  ? editValue
-                    ? editValue
-                    : [1, 1]
-                  : editValue);
-            });
+           serverEvent.Properties.forEach((key) => {
+            if (key === "Text") {
+              serverPropertiesObj[key] = editValue ? editValue.toString() : "";
+            } else if (key === "Value") {
+              serverPropertiesObj[key] = isNumber ? parseInt(editValue) : editValue;
+            } else if (key === "SelText") {
+              serverPropertiesObj[key] = editValue ? editValue : [1, 1];
+            } else {
+              serverPropertiesObj[key] = editValue;
+            }
+          });
+          
 
           
             console.log(
