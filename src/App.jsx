@@ -1183,6 +1183,7 @@ const App = () => {
           return;
         } else if (Event == 'Select'){
           const element = document.getElementById(nqEvent.ID)
+          console.log("Element: " + element)
           if(element) element.click()
         } else if (Event == 'Scroll'){
           webSocket.send(
@@ -1298,6 +1299,7 @@ const App = () => {
     const formParentID = findFormParentID(dataRef.current);
     if (localStorage.getItem('change-event')) {
       const { Event } = JSON.parse(localStorage.getItem('change-event'));
+      console.log("change event", Event);
       const updatedEvent = {
         ...Event,
         Info: [!element.target.id ? formParentID : element.target.id],
