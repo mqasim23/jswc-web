@@ -549,7 +549,7 @@ const App = () => {
 
             const isNumber = refData?.Properties?.hasOwnProperty('FieldType');
 
-            //const serverPropertiesObj = {};
+            const serverPropertiesObj = {};
             //serverEvent.Properties.map((key) => {
              // return (serverPropertiesObj[key] =
                // key == 'Text'
@@ -576,6 +576,7 @@ const App = () => {
                   : editValue);
             });
 
+          
             console.log(
               JSON.stringify({
                 WG: {
