@@ -1316,7 +1316,7 @@ const App = () => {
   };
 
   // const updatedData = _.cloneDeep(dataRef.current);
-  console.log('App', dataRef.current);
+  console.log('App is Running', dataRef.current);
 
   const setColorFunc = (colorStandardArray)=>{
     const reqColors = colorStandardArray?.reduce((prev, current)=>{
