@@ -435,6 +435,8 @@ const App = () => {
           }
 
           const { Event } = JSON.parse(localStorage.getItem(serverEvent.ID));
+
+          console.log("Event: " + Event)
           const serverPropertiesObj = {};
           serverEvent.Properties.map((key) => {
             return (serverPropertiesObj[key] = Event[key] || refData?.Properties?.[key]);
@@ -1296,6 +1298,7 @@ const App = () => {
   };
 
   const handleFocus = (element) => {
+    console.log("focus", element, localStorage.getItem("change-event"));
     const formParentID = findFormParentID(dataRef.current);
     if (localStorage.getItem('change-event')) {
       const { Event } = JSON.parse(localStorage.getItem('change-event'));
