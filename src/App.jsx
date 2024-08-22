@@ -542,7 +542,7 @@ const App = () => {
 
         if (Type == 'Edit') {
           const { Text, Value } = Properties;
-          console.log({Properties})
+          console.log("Properties",{Properties})
           const supportedProperties = ['Text', 'Value', 'SelText'];
 
           const result = checkSupportedProperties(supportedProperties, serverEvent?.Properties);

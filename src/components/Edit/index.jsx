@@ -361,6 +361,7 @@ const Edit = ({
     // check that the Edit is inside the Grid
     console.log("here in the handle event")
     if (location == 'inGrid') {
+      console.log("this is in the inGrid", value, emitValue)
       if (value != emitValue) {
         triggerChangeEvent();
         triggerCellChangedEvent();
