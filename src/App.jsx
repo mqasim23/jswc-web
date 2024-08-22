@@ -499,12 +499,15 @@ const App = () => {
           const serverPropertiesObj = {};
           const Form = JSON.parse(localStorage.getItem(serverEvent.ID));
 
+          console.log("form", serverEvent)
+
           if (!localStorage.getItem(serverEvent.ID)) {
             const serverPropertiesObj = {};
 
             serverEvent.Properties.map((key) => {
               return (serverPropertiesObj[key] = Properties[key]);
             });
+            console.log("form", serverPropertiesObj)
 
             const event = JSON.stringify({
               WG: {
@@ -522,10 +525,13 @@ const App = () => {
             return;
           }
 
+          
+          
           serverEvent.Properties.map((key) => {
             return (serverPropertiesObj[key] = Form[key]);
           });
-
+          
+          console.log("form", serverPropertiesObj)
           const event = JSON.stringify({
             WG: {
               ID: serverEvent.ID,
