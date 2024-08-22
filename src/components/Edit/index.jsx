@@ -280,11 +280,15 @@ const Edit = ({
             : emitValue,
       },
     });
-    console.log({event2})
+    console.log("Event 2",{event2, data})
     localStorage.setItem(data?.ID, event2);
+    console.log("Event 2 before sending")
+    if(!emitValue) return
     socket.send(event2)
     
     const exists = Event && Event.some((item) => item[0] === 'Change');
+
+    console.log("Event 2", {exists})
     if (!exists) return;
 
     const event = JSON.stringify({
@@ -355,6 +359,7 @@ const Edit = ({
 
   const handleEditEvents = () => {
     // check that the Edit is inside the Grid
+    console.log("here in the handle event")
     if (location == 'inGrid') {
       if (value != emitValue) {
         triggerChangeEvent();
