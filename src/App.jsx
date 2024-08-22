@@ -942,6 +942,7 @@ const App = () => {
 
           if (!localStorage.getItem(serverEvent.ID)) {
             const serverPropertiesObj = {};
+            console.log({serverEvent: serverEvent})
 
             serverEvent.Properties.map((key) => {
               return (serverPropertiesObj[key] = Properties[key]);
