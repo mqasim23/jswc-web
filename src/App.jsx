@@ -564,6 +564,8 @@ const App = () => {
                   //: editValue);
            // });
 
+           console.log("serverProperties", serverEvent);
+
            serverEvent.Properties.forEach((key) => {
             if (key === "Text") {
               serverPropertiesObj[key] = editValue ? editValue.toString() : "";
