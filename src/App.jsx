@@ -939,10 +939,10 @@ const App = () => {
 
           const result = checkSupportedProperties(supportedProperties, serverEvent?.Properties);
 
+          console.log("server Events",{ serverEvent, })
 
           if (!localStorage.getItem(serverEvent.ID)) {
             const serverPropertiesObj = {};
-            console.log({serverEvent: serverEvent})
 
             serverEvent.Properties.map((key) => {
               return (serverPropertiesObj[key] = Properties[key]);
@@ -978,6 +978,8 @@ const App = () => {
           serverEvent.Properties.map((key) => {
             return (serverPropertiesObj[key] = SubForm[key]);
           });
+
+          console.log("this", serverEvent)
 
           console.log(
             JSON.stringify({
