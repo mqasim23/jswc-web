@@ -34,6 +34,7 @@ const Edit = ({
   const [inputValue, setInputValue] = useState('');
   const [emitValue, setEmitValue] = useState('');
   const [initialValue, setInitialValue] = useState('');
+  const [prevFocused, setprevFocused] = useState("⌈");
   const dateInputRef = useRef();
 
   const {
@@ -282,7 +283,17 @@ const Edit = ({
     });
     // console.log({event2})
     localStorage.setItem(data?.ID, event2);
-    // socket.send(event2)
+
+
+    const event1 = JSON.stringify({
+      Event: {
+        EventName: 'Change',
+        ID: prevFocused,
+        Info: [data?.ID]
+      },
+    });
+    if(prevFocused) {
+    socket.send(event1)}
     
     const exists = Event && Event.some((item) => item[0] === 'Change');
 
@@ -371,6 +382,7 @@ const Edit = ({
 
   const handleGotFocus = () => {
     const previousFocusedId = localStorage.getItem('current-focus');
+    setprevFocused(previousFocusedId);
     const gotFocusEvent = JSON.stringify({
       Event: {
         EventName: 'GotFocus',
