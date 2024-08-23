@@ -580,7 +580,7 @@ const App = () => {
             } else if (key === "Value") {
               serverPropertiesObj[key] = isNumber ? parseInt(editValue) : editValue;
             } else if (key === "SelText") {
-              serverPropertiesObj[key] = editValue ? editValue : [1, 1];
+              serverPropertiesObj[key] = Properties[key] ? Properties[key] : [1, 1];
             } else {
               serverPropertiesObj[key] = editValue;
             }
