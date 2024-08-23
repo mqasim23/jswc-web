@@ -15,6 +15,7 @@ const CustomRibbonButtonGroup = ({ data }) => {
   const colSize = Captions?.length == 4 ? 6 : 12;
 
   const handleSelectEvent = (info) => {
+    console.log("heree info", info)
     const selectEvent = JSON.stringify({
       Event: {
         EventName: 'Select',
