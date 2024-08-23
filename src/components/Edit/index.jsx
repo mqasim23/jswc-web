@@ -280,11 +280,9 @@ const Edit = ({
             : emitValue,
       },
     });
-    console.log("Event 2",{event2, data})
+    // console.log({event2})
     localStorage.setItem(data?.ID, event2);
-    console.log("Event 2 before sending")
-    if(!emitValue) return
-    socket.send(event2)
+    // socket.send(event2)
     
     const exists = Event && Event.some((item) => item[0] === 'Change');
 

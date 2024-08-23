@@ -429,6 +429,28 @@ const Button = ({
           })
         );
 
+        console.log(
+          JSON.stringify({
+            Event: {
+              EventName: "Change",
+              ID: localStorage.getItem("current-focus"),
+              Info: [data?.ID]
+            },
+          })
+        );
+
+        socket.send(
+          JSON.stringify({
+            Event: {
+              EventName: "Change",
+              ID: localStorage.getItem("current-focus"),
+              Info: [data?.ID]
+            },
+          })
+        );
+
+      
+
         socket.send(
           JSON.stringify({
             Event: {
