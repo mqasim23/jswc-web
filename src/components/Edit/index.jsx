@@ -284,6 +284,7 @@ const Edit = ({
     // console.log({event2})
     localStorage.setItem(data?.ID, event2);
 
+    const prevFocusedID = JSON.parse(localStorage.getItem(prevFocused));
 
     const event1 = JSON.stringify({
       Event: {
@@ -292,8 +293,14 @@ const Edit = ({
         Info: [data?.ID]
       },
     });
-    if(prevFocused) {
-    socket.send(event1)}
+    const originalValue = data?.Properties?.Text || data?.Properties?.Value || '';
+
+    console.log("value", {value, emitValue, originalValue})
+
+    if(prevFocused && prevFocusedID.Event.EventName !== "Select" && originalValue !== emitValue) {
+      console.log("focused", prevFocusedID,prevFocusedID.Event.EventName !== "Select", originalValue !== emitValue );
+      socket.send(event1)
+  }
     
     const exists = Event && Event.some((item) => item[0] === 'Change');
 
