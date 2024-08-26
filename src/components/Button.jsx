@@ -439,15 +439,17 @@ const Button = ({
           })
         );
 
-        socket.send(
-          JSON.stringify({
-            Event: {
-              EventName: "Change",
-              ID: localStorage.getItem("current-focus"),
-              Info: [data?.ID]
-            },
-          })
-        );
+        if (localStorage.getItem("current-focus")) {
+          socket.send(
+            JSON.stringify({
+              Event: {
+                EventName: "Change",
+                ID: localStorage.getItem("current-focus"),
+                Info: [data?.ID],
+              },
+            })
+          );
+        }
 
       
 
