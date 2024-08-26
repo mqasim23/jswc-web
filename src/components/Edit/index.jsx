@@ -297,7 +297,7 @@ const Edit = ({
 
     console.log("value", {value, emitValue, originalValue})
 
-    if(prevFocused && prevFocusedID.Event.EventName !== "Select" && originalValue !== emitValue) {
+    if(prevFocused && prevFocusedID.Event.EventName !== "Select" && originalValue !== emitValue && prevFocused !== data.ID) {
       console.log("focused", prevFocusedID,prevFocusedID.Event.EventName !== "Select", originalValue !== emitValue );
       socket.send(event1)
   }
