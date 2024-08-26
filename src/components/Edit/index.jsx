@@ -283,25 +283,40 @@ const Edit = ({
     });
     // console.log({event2})
     localStorage.setItem(data?.ID, event2);
+    localStorage.setItem("shouldChangeEvent", data.Properties.hasOwnProperty("Event"))
 
     const prevFocusedID = JSON.parse(localStorage.getItem(prevFocused));
-
+  
+  if (!!data.Properties.hasOwnProperty("Event")) {
     const event1 = JSON.stringify({
       Event: {
-        EventName: 'Change',
+        EventName: "Change",
         ID: prevFocused,
-        Info: [data?.ID]
+        Info: [data?.ID],
       },
     });
-    const originalValue = data?.Properties?.Text || data?.Properties?.Value || '';
+    const originalValue =
+      data?.Properties?.Text || data?.Properties?.Value || "";
 
-    console.log("value", {value, emitValue, originalValue})
+    console.log("value focused", { value, emitValue, originalValue },  prevFocusedID,
+      prevFocusedID.Event.EventName !== "Select",
+      originalValue !== emitValue);
 
-    if(prevFocused && prevFocusedID.Event.EventName !== "Select" && originalValue !== emitValue && prevFocused !== data.ID) {
-      console.log("focused", prevFocusedID,prevFocusedID.Event.EventName !== "Select", originalValue !== emitValue );
-      socket.send(event1)
+    if (
+      prevFocused &&
+      prevFocusedID.Event.EventName !== "Select" &&
+      originalValue !== emitValue &&
+      prevFocused !== data.ID
+    ) {
+      console.log(
+        "focused",
+        prevFocusedID,
+        prevFocusedID.Event.EventName !== "Select",
+        originalValue !== emitValue
+      );
+      socket.send(event1);
+    }
   }
-    
     const exists = Event && Event.some((item) => item[0] === 'Change');
 
     console.log("Event 2", {exists})

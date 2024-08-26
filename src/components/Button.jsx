@@ -428,7 +428,7 @@ const Button = ({
             },
           })
         );
-
+        if (localStorage.getItem("current-focus") && localStorage.getItem("shouldChangeEvent")=== "true") {
         console.log(
           JSON.stringify({
             Event: {
@@ -439,7 +439,6 @@ const Button = ({
           })
         );
 
-        if (localStorage.getItem("current-focus")) {
           socket.send(
             JSON.stringify({
               Event: {
