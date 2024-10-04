@@ -1253,6 +1253,7 @@ const App = () => {
         } else if (Event == 'Select'){
           const element = document.getElementById(nqEvent.ID)
           if(element) element.click()
+          return;
         } else if (Event == 'Scroll'){
           webSocket.send(
             JSON.stringify({
