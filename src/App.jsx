@@ -1186,6 +1186,49 @@ const App = () => {
           webSocket.send(event);
           return;
         }
+        if (Type === "Upload") {
+          // TODO this branching is a bit mad!
+          // For now, we grab with direct JS access to the ID
+          // TODO multiple files
+          const file = document.getElementById(serverEvent.ID)?.files[0];
+          const resp = {
+            WG: {
+              ID: serverEvent.ID,
+              WGID: serverEvent.WGID,
+              Properties: {
+                LastModified: file.lastModified,
+                FileName: file.name,
+                FileSize: file.size,
+                FileType: file.type,
+              },
+            },
+          };
+          const props = resp.WG.Properties;
+          for (const p in props) {
+            if (!serverEvent.Properties.includes(p)) {
+              delete props[p];
+            }
+          }
+          
+          if (file) {
+            if (serverEvent.Properties.includes('FileBytes')) {
+              const reader = new FileReader();
+              reader.onload = function (event) {
+                const base64Str = btoa(event.target.result);
+                resp.WG.Properties.FileBytes = base64Str;
+                webSocket.send(
+                  JSON.stringify(resp),
+                );
+              };
+              reader.readAsBinaryString(file);
+            } else {
+              webSocket.send(
+                JSON.stringify(resp),
+              );
+            }
+          }
+        }
+        return;
       } else if (keys[0] == 'NQ') {
         const nqEvent = JSON.parse(event.data).NQ;
         const { Event, ID, Info, NoCallback = 0 } = nqEvent;
@@ -1338,6 +1381,32 @@ const App = () => {
           const event = JSON.stringify({ WX: { Info: !focusedID ? [] : [focusedID], WGID } });
           console.log(event);
           webSocket.send(event);
+        } else if (Method == 'SetCookie') {
+          Info.forEach((c) => {
+            document.cookie = c;
+          });
+          webSocket.send(JSON.stringify({ WX: { Info: [], WGID } }));
+        } else if (Method == 'GetCookie') {
+          const found = document.cookie
+            .split('; ')
+            .map((c) => c.split('='))
+            .filter((c) => Info.includes(c[0]));
+          webSocket.send(JSON.stringify({ WX: { Info: found, WGID } }));
+        } else if (Method == 'SetTitle') {
+          document.title = Info[0];
+          webSocket.send(JSON.stringify({ WX: { Info: [], WGID } }));
+        } else if (Method == 'GetTitle') {
+          webSocket.send(JSON.stringify({ WX: { Info: [document.title], WGID } }));
+        } else if (Method == 'EvalJS') {
+          // Here be dragons!
+          const results = Info.map((code) => {
+            try {
+              return [0, eval?.(code)];
+            } catch (e) {
+              return [-1, e.toString()];
+            }
+          });
+          webSocket.send(JSON.stringify({ WX: { Info: results, WGID }}));
         }
       } else if (keys[0] == 'Options') {
         handleData(JSON.parse(event.data).Options, 'WC');
@@ -1366,7 +1435,7 @@ const App = () => {
           },
           'WS'
         );
-      }
+      } 
     };
   };
 

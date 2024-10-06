@@ -184,7 +184,7 @@ const customStyles = parseFlexStyles(CSS)
                   })`}
                   style={{...customStyles}}
                 >
-                  {text.replace(/ /g, "\u00A0")}
+                  {text /*text.replace(/ /g, "\u00A0")*/}
                 </text>
               </g>
             );

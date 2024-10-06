@@ -34,6 +34,8 @@ import Image from './Image';
 import { useAppData } from '../hooks';
 import Chart from './Chart';
 import MessageBox from './MessageBox';
+import Link from './Link';
+import Upload from './Upload';
 
 const SelectComponent = ({
   data,
@@ -168,6 +170,10 @@ const SelectComponent = ({
   if (data?.Properties?.Type == 'Circle') return <Circle data={data} />;
   if (data?.Properties?.Type == 'ApexChart') return <Chart data={data} />;
   if (data?.Properties?.Type == 'MsgBox') return <MessageBox data= {data} />;
+  if (data?.Properties?.Type == 'Link') return <Link data={data} />;
+  if (data?.Properties?.Type == 'Upload') return <Upload data={data} />;
+
+  console.log("UNKNOWN: " + data?.Properties?.Type);
 };
 
 export default SelectComponent;
